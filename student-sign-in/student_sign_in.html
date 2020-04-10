@@ -12,24 +12,26 @@
 <body>
     <div id="app">
 
-        <!-- TODO show error alert -->
+        <!-- show error alert in template -->
+        <div class="alert alert-danger" v-show="errors.length > 0">
+            <li v-for="error in errors">{{error}}</li>
+        </div>
 
         <div class="card add-student m-2 p-2">
             <h4 class="card-title">Add new student</h4>
 
             <div class="form-group">
                 <label for="name">Name</label>
-                <!-- TODO v-model -->
-                <input id="name" class="form-control">
+                <input id="name" class="form-control" v-model.trim="newStudentName"> <!-- v-model attribute to each input. trim to remove whitespace -->
             </div>
             <div class="form-group">
                 <label for="starID">Star ID</label>
-                <!-- TODO v-model -->
-                <input id="starID" class="form-control">
+                <input id="starID" class="form-control" v-model.trim="newStarID">
             </div>
 
-            <!-- TODO v-on:click event handler -->
-            <button class="btn btn-primary">Add</button>
+            <!-- TODO v-on:click event handler, prevents default form submit
+            so Vue can handle the event instead -->
+            <button class="btn btn-primary" v-on:click.prevent="addStudent">Add</button>
         </div>
 
         <div class="card student-list m-2 p-2">
@@ -46,18 +48,63 @@
                     When the checkbox is checked/unchecked, the student will be signed in/out 
                     Add styles so present and absent student rows have different styles
                      -->
+                     <tr v-for="student in students" v-bind:class=" 'present-'+student.present"> <!-- display present and absent student using different styles -->
+                         <td>{{student.name}}</td>
+                         <td>{{student.starID}}</td>
+                         <td> <input type="checkbox" v-model="student.present" v-on:change="checked(student)"></td> <!-- student present/absent checkbox -->
+                     </tr>
                 </table>
             </div>
         </div>
 
         <transition name="fade">
-            <!-- TODO welcome or goodbye message -->
+            <!-- welcome or goodbye message. seeMessage conditional v-if -->
+            <div class="alert alert-success" v-if="seeMessage">{{message}} {{mostRecentSignIn}}</div>
         </transition>
     </div>
 
     <script>
 
-        // TODO Create Vue app
+        let app = new Vue({
+            el: "#app",
+            data: {
+                students: [ { name: 'A. Student', starID: 'aa1234aa', present: false},
+                            { name: 'B. Student', starID: 'bb1234bb', present: false}
+                             // list with two example students
+                            ],
+                            errors: [], // add errors property
+                            message: '', // message for "welcome" or "goodbye"
+                            mostRecentSignIn: '', // most recent signed in/out student name
+                            seeMessage: false, // conditionally see the message
+            },
+            methods: {
+                addStudent() {
+                    if (this.newStudentName && this.newStarID) { // check that name and starID are entered
+                        let student = { name: this.newStudentName, starID: this.newStarID }
+                        this.students.push(student)
+                        this.students.sort(function (s1, s2) { // sort students in alphabetical order. return negative number 1 if one student should be before second student. return postivie number if one student should be after second student
+                            return s1.name > s2.name ? 1 : -1
+                            // if the condition is true, return 1, otherwise return -1
+                        })
+                        this.newStudentName = ''
+                        this.newStarID = ''
+                }   else {
+                        this.errors.push('Name and StarID are both required') // push this error message to the errors array
+                }
+                },
+                checked(student) {
+                    this.message = student.present ? 'Welcome, ' : 'Goodbye, '
+                    this.mostRecentSignIn = student.name
+                    this.showMessage() // method for showing the message
+                },
+                showMessage() {
+                    this.seeMessage = true
+                    setTimeout( () => {
+                        this.seeMessage = false
+                    }, 3000) // 3000 determines length of message visibility (3 seconds)
+                }
+            }
+        })
 
     </script>
 
