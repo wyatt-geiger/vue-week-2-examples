@@ -14,9 +14,9 @@
 
         <!-- show error alert in template -->
         <div class="alert alert-danger" v-show="errors.length > 0">
-            <li v-for="error in errors">{{error}}</li>
+            <li v-for="error in errors">{{ error }}</li>
         </div>
-
+        <form>
         <div class="card add-student m-2 p-2">
             <h4 class="card-title">Add new student</h4>
 
@@ -32,6 +32,7 @@
             <!-- TODO v-on:click event handler, prevents default form submit
             so Vue can handle the event instead -->
             <button class="btn btn-primary" v-on:click.prevent="addStudent">Add</button>
+        </form>
         </div>
 
         <div class="card student-list m-2 p-2">
@@ -83,13 +84,21 @@
                         let student = { name: this.newStudentName, starID: this.newStarID }
                         this.students.push(student)
                         this.students.sort(function (s1, s2) { // sort students in alphabetical order. return negative number 1 if one student should be before second student. return postivie number if one student should be after second student
-                            return s1.name > s2.name ? 1 : -1
-                            // if the condition is true, return 1, otherwise return -1
+                            
+                            s1 = s1.name.toLowerCase()
+                            s2 = s2.name.toLowerCase() // set both variables to lowercase forms to compare them
+
+                            return s1 > s2 ? 1 : -1
+                            // if the condition is true, return 1, otherwise return -1. this will sort names and will be case-insensitive
                         })
                         this.newStudentName = ''
                         this.newStarID = ''
+                }   else if (!this.newStudentName && !this.newStarID) {
+                        this.errors.push('Name and StarID are both required') // push this error message to the errors array if both fields are blank
+                }   else if (!this.newStarID) {
+                        this.errors.push('StarID is required') // push this error message to the errors array if StarID is blank
                 }   else {
-                        this.errors.push('Name and StarID are both required') // push this error message to the errors array
+                        this.errors.push('Name is required') // push this error message to the errors array if Name is blank
                 }
                 },
                 checked(student) {

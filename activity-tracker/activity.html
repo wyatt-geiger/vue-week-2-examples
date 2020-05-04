@@ -63,6 +63,20 @@
                         <label class="form-check-label" for="v1">{{ digital }}</label>
                     </div>
 
+                    <!-- Vue component that adds a completion checkbox using a checkbox type -->
+                    <div class="form-group">
+                        <!-- v-model to app data property -->
+                        <input id="completed" class="form-control, form-label" type="checkbox" v-model="completed">
+                        <label class="form-label" for="completed">Completed?</label>
+                    </div>
+
+                    <!-- Vue component that adds a notes section using a textarea type -->
+                    <div class="form-group">
+                        <!-- v-model to app data property -->
+                        <label class="form-label" for="notes">Notes (40 character limit):</label>
+                        <input id="notes" class="form-control" type="textarea" v-model="notes">
+                    </div>
+
                     <div>
                         <!-- TODO v-on click event -->
                         <button class="btn btn-primary mt-2" type="button" v-on:click="submit">Add record</button>
@@ -86,14 +100,19 @@
                             <th>How long?</th>
                             <th>Type</th>
                             <th>Digital or traditional?</th>
+                            <th>Completed?</th>
+                            <th>Notes:</th>
                         </tr>
                         <!-- display one table row for each activityRecord  -->
                         <tr v-for="record in activityRecords">
                             <td>{{ record.when | shortDateFormat }}</td>
-                            <td>{{ record.howLong }}</td>
+                            <td>{{ record.howLong | decimalHours }}</td>
                             <td>{{ record.type }}</td>
                             <td>{{ record.digitalTraditional }}</td>
+                            <td>{{ record.completed }}</td>
+                            <td>{{ record.notes | notesLimit }}</td>
                         </tr>
+
                     </table>
                 </div>
             </div>
@@ -105,11 +124,11 @@
 
             <div class="card-body">
                 <!-- use computed property to display total hours -->
-                <p>You have practiced a total of {{ totalHours }} hours, broken down as follows:</p>
+                <p>You have practiced a total of {{ totalHours | decimalHours }} hours, broken down as follows:</p>
                 
                 <!-- use computed property to display total for each type, displayed in a list  -->
                 <ul class="list-group list-group-flush"> <!-- hours, type is value, key -->
-                    <li class="list-group-item" v-for="hours, type in totalHoursByType">{{ type }}: {{ hours }}</li>
+                    <li class="list-group-item" v-for="hours, type in totalHoursByType">{{ type }}: {{ hours | decimalHours }}</li>
                 </ul>
             </div>
         </div>
@@ -128,9 +147,13 @@
                 type: 'sketching',
                 digitalTraditional: 'traditional',
                 activityRecords: [],
-                types: ['sketching', 'painting', 'drawing'],
+                types: ['sketching',
+                 'painting',
+                  'drawing'],
                 digital: 'digital',
                 traditional: 'traditional',
+                completed: false,
+                notes: '',
                 errors: []
             },
             computed: {
@@ -158,6 +181,17 @@
                         hoursByType[type] = totalForType
                     })
                     return hoursByType
+                },
+                completedCheck() { // method to determine whether checkbox is marked. If so, Yes is displayed in Activity Record, and vice versa
+
+                    if (this.completed) {
+                        return 'Yes';
+                    } else {
+                        return 'No';
+                    }
+                },
+                optionalNotes() { // method to add notes to activity record
+                    return this.notes;
                 }
             },
             methods: {
@@ -177,13 +211,17 @@
                         when: this.whenLocal,
                         howLong: this.howLong,
                         type: this.type,
-                        digitalTraditional: this.digitalTraditional
+                        digitalTraditional: this.digitalTraditional,
+                        completed: this.completedCheck,
+                        notes: this.optionalNotes // append notes
                         }
                         this.activityRecords.push(record)
                         this.activityRecords.sort(function (r1, r2) { // sort oldest first, most recent at the end (can also reverse order if you want)
                             return r1.when.getTime() - r2.when.getTime()
                         })
                     }
+
+
 
                     
                 }
@@ -194,7 +232,18 @@
                 },
                 shortDateFormat(date) {
                     return new Intl.DateTimeFormat().format(date)
+                },
+                notesLimit(notes) { // filter to limit characters to 40 when appending notes to activity record
+                    if (notes.length <= 40) {
+                        return notes;
+                    } else {
+                        return notes.substring(0,40);
+                    }
+                },
+                decimalHours(hours) { // filter to display hour totals to 2 decimal places
+                    return hours.toFixed(2);
                 }
+
             }
             
         })
